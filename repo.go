@@ -18,17 +18,22 @@ func (repo *Repo) OpenPulls() (result []Pull, err error){
 
 func updatePulls(repo *Repo, ghPulls *[]github.PullRequest)([]Pull) {
 	pulls := make([]Pull, len(*ghPulls))
+	c := make(chan Pull, len(pulls))
 
-	for i, ghPull := range *ghPulls {
-		pulls[i] = updatePull(repo, ghPull)
+	for _, ghPull := range *ghPulls {
+		go updatePull(repo, ghPull, c)
+	}
+
+	for i := 0; i < cap(c); i++ {
+		pulls[i] = <-c
 	}
 
 	return pulls
 }
 
-func updatePull(repo *Repo, ghPull github.PullRequest)(Pull) {
+func updatePull(repo *Repo, ghPull github.PullRequest, c chan Pull) {
 	pull := Pull{&ghPull, nil, repo}
 	pull.Update()
 
-    return pull
+	c <- pull
 }

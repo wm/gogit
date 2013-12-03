@@ -8,7 +8,7 @@ import (
 func TestOpen(t *testing.T) {
 	snowflake := Repo{"IoraHealth", "snowflake"}
 
-	pulls, err := Open(&snowflake)
+	pulls, err := snowflake.OpenPulls()
 
 	if err != nil {
 		t.Errorf("Open failed due to error %v", err)
@@ -19,6 +19,6 @@ func TestOpen(t *testing.T) {
 	}
 
 	for _, pull := range pulls {
-		fmt.Printf("[number: %d, comments: %d, status: %s, octocatted: %v]", pull.Number, pull.CommentCount, pull.Status, pull.Octocatted)
+		fmt.Printf("[number: %d, comments: %d, status: %s, octocatted: %v]", pull.State.Number, pull.State.CommentCount, pull.State.Status, pull.State.Octocatted)
 	}
 }
