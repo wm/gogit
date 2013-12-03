@@ -24,7 +24,7 @@ var t = &oauth.Transport{
 
 var client = github.NewClient(t.Client())
 
-func Open(repo *Repo) (result []PullState, err error){
+func (repo *Repo) Open() (result []PullState, err error){
 	pulls, _, err := client.PullRequests.List(repo.Organization, repo.Name, nil)
 	pullStates := make([]PullState, len(pulls))
 

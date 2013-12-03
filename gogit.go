@@ -5,8 +5,8 @@ import (
 )
 
 func Run() {
-  snowflake := Repo{"IoraHealth", "IoraHealth"}
-  statuses, _ := Open(&snowflake)
+  repo := Repo{"IoraHealth", "IoraHealth"}
+  statuses, _ := repo.Open()
 
   fmt.Printf("size: %d\n", len(statuses))
 
