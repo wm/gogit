@@ -5,9 +5,10 @@ import (
 	"github.com/google/go-github/github"
 )
 
-type Repo struct {
-	Organization string
-	Name         string
+type Pull struct {
+	Data  *github.PullRequest
+	State *PullState
+	Repo  *Repo
 }
 
 type PullState struct {
@@ -15,26 +16,6 @@ type PullState struct {
 	CommentCount int
 	Status       string
 	Octocatted   bool
-}
-
-type Pull struct {
-	Data  *github.PullRequest
-	State *PullState
-	Repo  *Repo
-}
-
-func (repo *Repo) OpenPulls() (result []Pull, err error){
-	ghPulls, _, err := client.PullRequests.List(repo.Organization, repo.Name, nil)
-	pulls := make([]Pull, len(ghPulls))
-
-	for i, githubPull := range ghPulls {
-		pull := Pull{&githubPull, nil, repo}
-		pull.Update()
-
-		pulls[i] = pull
-	}
-
-	return pulls, nil
 }
 
 func (pull *Pull) Update() {
