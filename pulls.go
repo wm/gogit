@@ -2,44 +2,57 @@ package gogit
 
 import (
 	"strings"
-	"code.google.com/p/goauth2/oauth"
 	"github.com/google/go-github/github"
 )
 
 type Repo struct {
 	Organization string
-	Name string
+	Name         string
 }
 
 type PullState struct {
-	Number int
+	Number       int
 	CommentCount int
-	Status string
-	Octocatted bool
+	Status       string
+	Octocatted   bool
 }
 
-var t = &oauth.Transport{
-	Token: &oauth.Token{AccessToken: "7c5f06367ffea77071c84e32f02a505304248097"},
+type Pull struct {
+	Data  *github.PullRequest
+	State *PullState
+	Repo  *Repo
 }
 
-var client = github.NewClient(t.Client())
+func (repo *Repo) OpenPulls() (result []Pull, err error){
+	ghPulls, _, err := client.PullRequests.List(repo.Organization, repo.Name, nil)
+	pulls := make([]Pull, len(ghPulls))
 
-func (repo *Repo) Open() (result []PullState, err error){
-	pulls, _, err := client.PullRequests.List(repo.Organization, repo.Name, nil)
-	pullStates := make([]PullState, len(pulls))
+	for i, githubPull := range ghPulls {
+		pull := Pull{&githubPull, nil, repo}
+		pull.Update()
 
-	for i, pull := range pulls {
-		pull, _, _ := client.PullRequests.Get(repo.Organization, repo.Name, *pull.Number)
-		pullState := PullState{*pull.Number, *pull.Comments, status(repo, pull), octocatted(repo, pull)}
-		pullStates[i] = pullState
+		pulls[i] = pull
 	}
 
-	return pullStates, nil
+	return pulls, nil
+}
+
+func (pull *Pull) Update() {
+	pull.Data, _, _ = client.PullRequests.Get(
+		pull.Repo.Organization, pull.Repo.Name, *pull.Data.Number)
+
+	pull.State  = &PullState{
+		*pull.Data.Number,
+		*pull.Data.Comments,
+		status(pull.Repo, pull.Data),
+		octocatted(pull.Repo, pull.Data),
+	}
 }
 
 func status(repo *Repo, pull *github.PullRequest) (status string) {
 	sha := "09fe86ee37b1ec355c1ae55b50b37682f630cca3"
 	statuses, _, _ := client.Repositories.ListStatuses(repo.Organization, repo.Name, sha)
+
 	if len(statuses) > 0 {
 		return *statuses[0].State
 	}
