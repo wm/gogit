@@ -25,12 +25,13 @@ func Run() {
 	repo := Repo{opts["OWNER"], opts["REPO"]}
 	pulls, _ := repo.OpenPulls()
 
+	fmt.Printf("| Pull | Comments | Passing | :octocatted: |\n")
 	for _, pull := range pulls {
-		fmt.Printf("[number: %d, comments: %d, status: %s, octocatted: %v]\n",
-		pull.State.Number,
-		pull.State.CommentCount,
-		pull.State.Status,
-		pull.State.Octocatted)
+		fmt.Printf("| %4d | %8d | %7s | %12v |\n",
+			pull.State.Number,
+			pull.State.CommentCount,
+			pull.State.Status,
+			pull.State.Octocatted)
 	}
 }
 
