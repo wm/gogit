@@ -1,3 +1,2 @@
 *.test
-gogit
-gogit.slow
+gogit/gogit
