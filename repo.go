@@ -7,6 +7,23 @@ import (
 type Repo struct {
 	Organization string
 	Name         string
+	OpenIssuesCount int
+}
+
+func List(owner string) (result []Repo, err error){
+	opts := github.RepositoryListByOrgOptions{"private", github.ListOptions{0, 100}}
+	ghRepos, _, err := client.Repositories.ListByOrg(owner, &opts)
+	if err != nil { return nil, err }
+
+	repos := make([]Repo, len(ghRepos))
+
+	for i, ghRepo := range ghRepos {
+		repos[i].Organization = owner
+		repos[i].Name         = *ghRepo.Name
+		repos[i].OpenIssuesCount = *ghRepo.OpenIssuesCount
+	}
+
+	return repos, nil
 }
 
 func (repo *Repo) OpenPulls() (result []Pull, err error){
