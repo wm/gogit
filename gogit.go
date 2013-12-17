@@ -10,58 +10,19 @@ import (
 
 var t *oauth.Transport
 var client *github.Client
+var ok bool
+var Opts map[string]string
 
-func Run() {
-	opts, ok := readOptions()
+func init() {
+	Opts, ok = readOptions()
 
 	if !ok {
 		printUsage()
 		return
 	}
 
-	t = &oauth.Transport{ Token: &oauth.Token{AccessToken: opts["TOKEN"]} }
+	t = &oauth.Transport{ Token: &oauth.Token{AccessToken: Opts["TOKEN"]} }
 	client = github.NewClient(t.Client())
-
-	repos, _ := List(opts["OWNER"])
-
-	c := make(chan []Pull, len(repos))
-
-	for _, repo := range repos {
-	    if repo.OpenIssuesCount > 0 {
-			go getReposOpenPulls(repo, c)
-		}
-	}
-
-	for _, repo := range repos {
-	    if repo.OpenIssuesCount > 0 {
-			printRepoPulls(c)
-		}
-	}
-}
-
-func getReposOpenPulls(repo Repo, c chan []Pull)  {
-	pulls, _ := repo.OpenPulls()
-	c <- pulls
-}
-
-func printRepoPulls(c chan []Pull) {
-	pulls := <-c
-	pullCount := len(pulls)
-
-	if pullCount > 0 {
-		repoName := pulls[0].Repo.Name
-		fmt.Printf("%v (%v)\n", repoName, pullCount)
-		fmt.Printf("| Pull | Comments | Passing | :octocatted: |\n")
-		for _, pull := range pulls {
-			fmt.Printf("| %4d | %8d | %7s | %12v |\n",
-			pull.State.Number,
-			pull.State.CommentCount,
-			pull.State.Status,
-			pull.State.Octocatted)
-		}
-	}
-
-	fmt.Println("")
 }
 
 func readOptions() (opts map[string]string, ok bool) {
