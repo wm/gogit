@@ -10,7 +10,7 @@ type Repo struct {
 	OpenIssuesCount int
 }
 
-func List(owner string) (result []Repo, err error){
+func ListRepos(owner string) (result []Repo, err error){
 	opts := github.RepositoryListByOrgOptions{"private", github.ListOptions{0, 100}}
 	ghRepos, _, err := client.Repositories.ListByOrg(owner, &opts)
 	if err != nil { return nil, err }
