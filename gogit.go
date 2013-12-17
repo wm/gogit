@@ -12,4 +12,3 @@ func SetGithubToken(token string) {
 	t = &oauth.Transport{ Token: &oauth.Token{AccessToken: token} }
 	client = github.NewClient(t.Client())
 }
-
