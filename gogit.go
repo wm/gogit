@@ -15,8 +15,7 @@ func Run() {
 	opts, ok := readOptions()
 
 	if !ok {
-		fmt.Printf("Please set your env variable\n")
-		fmt.Printf("GOGIT_GH_TOKEN\n")
+		printUsage()
 		return
 	}
 
@@ -25,20 +24,33 @@ func Run() {
 
 	repos, _ := List(opts["OWNER"])
 
+	c := make(chan []Pull, len(repos))
+
 	for _, repo := range repos {
 	    if repo.OpenIssuesCount > 0 {
-			pulls, _ := repo.OpenPulls()
-			printPulls(repo.Name, pulls)
+			go getReposOpenPulls(repo, c)
+		}
+	}
+
+	for _, repo := range repos {
+	    if repo.OpenIssuesCount > 0 {
+			printRepoPulls(c)
 		}
 	}
 }
 
-func printPulls(repoName string, pulls []Pull) {
+func getReposOpenPulls(repo Repo, c chan []Pull)  {
+	pulls, _ := repo.OpenPulls()
+	c <- pulls
+}
+
+func printRepoPulls(c chan []Pull) {
+	pulls := <-c
 	pullCount := len(pulls)
 
-	fmt.Printf("%v (%v)\n", repoName, pullCount)
-
 	if pullCount > 0 {
+		repoName := pulls[0].Repo.Name
+		fmt.Printf("%v (%v)\n", repoName, pullCount)
 		fmt.Printf("| Pull | Comments | Passing | :octocatted: |\n")
 		for _, pull := range pulls {
 			fmt.Printf("| %4d | %8d | %7s | %12v |\n",
@@ -53,15 +65,32 @@ func printPulls(repoName string, pulls []Pull) {
 }
 
 func readOptions() (opts map[string]string, ok bool) {
-	var owner string
-	flag.StringVar(&owner, "owner", "wm", "The Owner (Org/user) of the repos")
+	accessToken, okToken := syscall.Getenv("GOGIT_GH_TOKEN")
+	owner, okOwner       := syscall.Getenv("GOGIT_OWNER")
+
+	if !okToken { accessToken = "" }
+	if !okOwner { owner = "" }
+
+	ownerFlag := flag.String("owner", owner, "The Owner (Org/user) of the repos")
+	tokenFlag := flag.String("token", accessToken, "The github token")
+
 	flag.Parse()
 
-	accessToken, okToken := syscall.Getenv("GOGIT_GH_TOKEN")
-
 	opts = map[string]string {
-		"TOKEN": accessToken,
-		"OWNER": owner,
+		"TOKEN": *tokenFlag,
+		"OWNER": *ownerFlag,
 	}
-	return opts, okToken
+
+	if (opts["TOKEN"] == "") || (opts["OWNER"] == "") {
+		return nil, false
+	}
+
+	return opts, true
+}
+
+func printUsage() {
+	fmt.Printf("Usage: gogit -token 'MY_GH_TOKEN' -owner 'MyOrganization'")
+	fmt.Printf("\n")
+	fmt.Printf("Alternatively you can set the GOGIT_GH_TOKEN and GOGIT_OWNER")
+	fmt.Printf(" env variables.\n")
 }
