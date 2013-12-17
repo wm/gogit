@@ -16,13 +16,19 @@ CLI App
 
 You need to set some ENV variables
 
+```
+$ cd cmd ; go install cmd/gogit
+```
 
 ```
-$ go build cmd/gogit
-
 $ export GOGIT_GH_TOKEN=<your github API token>
-$ export GOGIT_GH_OWNER='wm'
-$ export GOGIT_GH_REPO='gogit'
+$ export GOGIT_OWNER=<the organization or owner of repositories>
 
 $ gogit
+```
+
+or
+
+```
+$ gogit -token 7c5f06367ffea77071c84e32f02a505304248097 github API token> -owner wm
 ```
